@@ -47,7 +47,8 @@ try:
     book_stores = list()
 
     for i in range(10):
-        book_stores = book_stores + driver.find_elements(By.CLASS_NAME, "place_bluelink")[i*10:]
+        book_stores = driver.find_elements(By.CLASS_NAME, "place_bluelink")
+
         last_book_store = book_stores[-1]
         action = ActionChains(driver)
         action.move_to_element(last_book_store).perform()
