@@ -42,6 +42,14 @@ def scroll_down(height):
     except Exception:
         pass
 
+def to_next_page():
+    left_or_right = driver.find_elements(By.CLASS_NAME, "eUTV2")
+    for button in left_or_right:
+        if button.find_element(By.TAG_NAME, "span").text == "다음페이지":
+            right_button = button
+            if right_button.get_attribute("aria-disabled") == "false":
+                right_button.click()
+            
 
 def analyze_address(address):
     
@@ -219,6 +227,8 @@ def main():
 
             driver.switch_to.default_content()
             switch_frame(frame_id="searchIframe")
+
+        to_next_page()
 
     except Exceptions.NoSuchElementException:
         print("ERROR: element 검색 실패")
