@@ -42,30 +42,11 @@ def scroll_down(height):
     except Exception:
         pass
 
-def to_next_page():
-
-    # TODO("페이지네이션 버튼 변경 (> 버튼 누르면 됨)")
-    # TODO("> 버튼 활성화 되어 있을 떄: <a>클래스는 eUTV2만 비활성화시 Y89AQ도 같이")
-
-    return 0
 
 def analyze_address(address):
     
     address_list = address.split()
 
-    metro = address_list[0]
-    if metro == "세종":
-        return analyze_sejong(address_list)
-    elif metro == "제주":
-        return analyze_jeju(address_list)
-    elif metro in ["부산", "인천", "대구", "광주", "대전", "울산"]:
-        return analyze_guangyuksi(address_list)
-    elif metro in ["경기", "충북", "충남", "전북", "전남", "경북", "경남"]:
-        return analyze_do(address_list)
-    elif metro in "서울":
-        return analyze_teugbyeolsi(address_list)
-
-def analyze_sejong(address_list):
     address_dict = dict()
     address_dict["metro"] = address_list[0]
     address_dict["basic"] = "null"
@@ -73,6 +54,20 @@ def analyze_sejong(address_list):
     address_dict["town"] = "null"
     address_dict["road"] = "null"
     address_dict["detail"] = "null"
+
+    metro = address_list[0]
+    if metro == "세종":
+        return analyze_sejong(address_list, address_dict)
+    elif metro == "제주":
+        return analyze_jeju(address_list, address_dict)
+    elif metro in ["부산", "인천", "대구", "광주", "대전", "울산"]:
+        return analyze_guangyuksi(address_list, address_dict)
+    elif metro in ["경기", "충북", "충남", "전북", "전남", "경북", "경남"]:
+        return analyze_do(address_list, address_dict)
+    elif metro in "서울":
+        return analyze_teugbyeolsi(address_list, address_dict)
+
+def analyze_sejong(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("읍") or word.endswith("면"):
@@ -87,14 +82,7 @@ def analyze_sejong(address_list):
 
     return address_dict
 
-def analyze_jeju(address_list):
-    address_dict = dict()
-    address_dict["metro"] = address_list[0]
-    address_dict["basic"] = "null"
-    address_dict["city"] = "null"
-    address_dict["town"] = "null"
-    address_dict["road"] = "null"
-    address_dict["detail"] = "null"
+def analyze_jeju(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("시"):
@@ -112,15 +100,7 @@ def analyze_jeju(address_list):
 
     return address_dict
 
-def analyze_guangyuksi(address_list):
-    address_dict = dict()
-    address_dict["metro"] = address_list[0]
-    address_dict["basic"] = "null"
-    address_dict["city"] = "null"
-    address_dict["town"] = "null"
-    address_dict["road"] = "null"
-    address_dict["detail"] = "null"
-
+def analyze_guangyuksi(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("구") or word.endswith("군"):
             address_dict["basic"] = word
@@ -136,15 +116,7 @@ def analyze_guangyuksi(address_list):
 
     return address_dict
 
-def analyze_do(address_list):
-    address_dict = dict()
-    address_dict["metro"] = address_list[0]
-    address_dict["basic"] = "null"
-    address_dict["city"] = "null"
-    address_dict["town"] = "null"
-    address_dict["road"] = "null"
-    address_dict["detail"] = "null"
-
+def analyze_do(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("시") or word.endswith("군"):
             address_dict["basic"] = word
@@ -162,14 +134,7 @@ def analyze_do(address_list):
 
     return address_dict
 
-def analyze_teugbyeolsi(address_list):
-    address_dict = dict()
-    address_dict["metro"] = address_list[0]
-    address_dict["basic"] = "null"
-    address_dict["city"] = "null"
-    address_dict["town"] = "null"
-    address_dict["road"] = "null"
-    address_dict["detail"] = "null"
+def analyze_teugbyeolsi(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("구"):
@@ -189,7 +154,7 @@ space_dict_list = []
 
 def main():
     try:
-        
+
         book_stores = list()
 
         for i in range(10):
@@ -254,9 +219,6 @@ def main():
 
             driver.switch_to.default_content()
             switch_frame(frame_id="searchIframe")
-
-        # TODO: 다음 페이지 있으면 이동
-        # TODO: 다음 페이지 없으면 종료
 
     except Exceptions.NoSuchElementException:
         print("ERROR: element 검색 실패")
