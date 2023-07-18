@@ -134,6 +134,31 @@ def analyze_guangyuksi(address_list):
 
     return address_dict
 
+def analyze_do(address_list):
+    address_dict = dict()
+    address_dict["metro"] = address_list[0]
+    address_dict["basic"] = "null"
+    address_dict["city"] = "null"
+    address_dict["town"] = "null"
+    address_dict["road"] = "null"
+    address_dict["detail"] = "null"
+
+    for word in address_list[1:]:
+        if word.endswith("시") or word.endswith("군"):
+            address_dict["basic"] = word
+        elif word.endswith("구"):
+            address_dict["city"] = word
+        elif word.endswith("읍") or word.endswith("면"):
+            address_dict["town"] = word
+        elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
+            address_dict["road"] = word
+        else:
+            if address_dict["detail"] == "null":
+                address_dict["detail"] = word
+            else:
+                address_dict["detail"] += " " + word
+
+    return address_dict
 
 metro_list = ['서울', '부산', '인천', '대구', '광주', '대전', '울산', '세종', '경기도', '충청북도', '충청남도', '전라북도', '전라남도', '경상북도', '경상남도', '강원', '제주']
 space_dict_list = []
@@ -227,7 +252,7 @@ def search(metro_list):
         input = driver.find_element(By.CLASS_NAME, "input_search")
         input.click()
         # input.send_keys(metro + " 독립서점")
-        input.send_keys("부산" + " 독립서점")
+        input.send_keys("경기" + " 독립서점")
         input.send_keys(Keys.RETURN)
 
         sleep(3)
