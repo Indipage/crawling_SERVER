@@ -67,7 +67,7 @@ def analyze_address(address):
     metro = address_list[0]
     if metro == "세종":
         return analyze_sejong(address_list, address_dict)
-    elif metro == "제주":
+    elif metro in ["제주", "강원"]:
         return analyze_jeju(address_list, address_dict)
     elif metro in ["부산", "인천", "대구", "광주", "대전", "울산"]:
         return analyze_guangyuksi(address_list, address_dict)
@@ -158,6 +158,26 @@ def analyze_teugbyeolsi(address_list, address_dict):
 
     return address_dict
 
+def operating_day_to_dict(book_store_time_days, book_store_time_hours, book_store_closed_days):
+    operating_dict = dict()
+    for i in range(len(book_store_time_days)):
+        hour = book_store_time_hours[i].text
+        day = book_store_time_days[i].text
+        if "정기휴무" in hour or "정보없음" in hour:
+            book_store_closed_days += day + " "
+            continue 
+        if "\n" in hour:
+            index = hour.index("""\n""")
+            hour = hour[:index]
+        else:
+            if hour not in operating_dict:
+                operating_dict[hour] = day
+            else:
+                operating_dict[hour] += " " + day
+
+    return operating_dict, book_store_closed_days
+    
+
 metro_list = ['서울', '부산', '인천', '대구', '광주', '대전', '울산', '세종', '경기도', '충청북도', '충청남도', '전라북도', '전라남도', '경상북도', '경상남도', '강원', '제주']
 space_dict_list = []
 
@@ -200,11 +220,13 @@ def main():
                 book_store_time_days = driver.find_elements(By.CLASS_NAME, "i8cJw")
                 book_store_time_hours = driver.find_elements(By.CLASS_NAME, "H3ua4")
 
-                for i in range(len(book_store_time_days)):
-                    if "정기휴무" in book_store_time_hours[i].text:
-                        book_store_closed_days += book_store_time_days[i].text + " "
-                    else:
-                        book_store_time += book_store_time_days[i].text + "-> " + book_store_time_hours[i].text + " "
+                book_store_time, book_store_closed_days = operating_day_to_dict(book_store_time_days, book_store_time_hours, book_store_closed_days)
+
+                # for i in range(len(book_store_time_days)):
+                #     if "정기휴무" in book_store_time_hours[i].text:
+                #         book_store_closed_days += book_store_time_days[i].text + " "
+                #     else:
+                #         book_store_time += book_store_time_days[i].text + "-> " + book_store_time_hours[i].text + " "
 
             # 영업 시간 토글 없을 때
             except Exceptions.NoSuchElementException:
@@ -212,7 +234,6 @@ def main():
                     book_store_time = driver.find_element(By.CLASS_NAME, "U7pYf").text
                 except Exceptions.NoSuchElementException:
                     book_store_time = "null"
-                        
 
             try:
                 book_store_phone = driver.find_element(By.CLASS_NAME, "xlx7Q").text
@@ -243,23 +264,23 @@ def main():
 
 def search(metro_list):
     # try: 
-    for metro in metro_list:
-        driver.find_element(By.CLASS_NAME, "link_navbar.home").click()
-        sleep(3)
+    # for metro in metro_list:
+    driver.find_element(By.CLASS_NAME, "link_navbar.home").click()
+    sleep(3)
 
-        input = driver.find_element(By.CLASS_NAME, "input_search")
-        input.click()
-        # input.send_keys(metro + " 독립서점")
-        input.send_keys("세종" + " 독립서점")
-        input.send_keys(Keys.RETURN)
+    input = driver.find_element(By.CLASS_NAME, "input_search")
+    input.click()
+    # input.send_keys(metro + " 독립서점")
+    input.send_keys("서울" + " 독립서점")
+    input.send_keys(Keys.RETURN)
 
-        sleep(3)
+    sleep(3)
 
-        switch_frame(frame_id="searchIframe")
+    switch_frame(frame_id="searchIframe")
 
-        space_list = main()
-        df = ps.DataFrame(data=space_list)
-        df.to_excel("test.xlsx", index=False)
+    space_list = main()
+    df = ps.DataFrame(data=space_list)
+    df.to_excel("test.xlsx", index=False)
 
     # except Exceptions.NoSuchElementException:
         # print("ERROR: element 검색 실패")
