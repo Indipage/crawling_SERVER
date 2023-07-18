@@ -62,6 +62,8 @@ def analyze_address(address):
         return analyze_guangyuksi(address_list)
     elif metro in ["경기", "충북", "충남", "전북", "전남", "경북", "경남"]:
         return analyze_do(address_list)
+    elif metro in "서울":
+        return analyze_teugbyeolsi(address_list)
 
 def analyze_sejong(address_list):
     address_dict = dict()
@@ -150,6 +152,28 @@ def analyze_do(address_list):
             address_dict["city"] = word
         elif word.endswith("읍") or word.endswith("면"):
             address_dict["town"] = word
+        elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
+            address_dict["road"] = word
+        else:
+            if address_dict["detail"] == "null":
+                address_dict["detail"] = word
+            else:
+                address_dict["detail"] += " " + word
+
+    return address_dict
+
+def analyze_teugbyeolsi(address_list):
+    address_dict = dict()
+    address_dict["metro"] = address_list[0]
+    address_dict["basic"] = "null"
+    address_dict["city"] = "null"
+    address_dict["town"] = "null"
+    address_dict["road"] = "null"
+    address_dict["detail"] = "null"
+
+    for word in address_list[1:]:
+        if word.endswith("구"):
+            address_dict["basic"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
             address_dict["road"] = word
         else:
@@ -252,7 +276,7 @@ def search(metro_list):
         input = driver.find_element(By.CLASS_NAME, "input_search")
         input.click()
         # input.send_keys(metro + " 독립서점")
-        input.send_keys("경기" + " 독립서점")
+        input.send_keys("서울" + " 독립서점")
         input.send_keys(Keys.RETURN)
 
         sleep(3)
