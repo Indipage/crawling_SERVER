@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions as Exceptions
+import pandas as ps
 import time
 
 def sleep(second):
@@ -236,8 +237,9 @@ def main():
     finally:
         pass
 
-
+    driver.switch_to.default_content()
     driver.quit()
+    return space_dict_list
 
 def search(metro_list):
     # try: 
@@ -248,14 +250,16 @@ def search(metro_list):
         input = driver.find_element(By.CLASS_NAME, "input_search")
         input.click()
         # input.send_keys(metro + " 독립서점")
-        input.send_keys("서울" + " 독립서점")
+        input.send_keys("세종" + " 독립서점")
         input.send_keys(Keys.RETURN)
 
         sleep(3)
 
         switch_frame(frame_id="searchIframe")
 
-        main()
+        space_list = main()
+        df = ps.DataFrame(data=space_list)
+        df.to_excel("test.xlsx", index=False)
 
     # except Exceptions.NoSuchElementException:
         # print("ERROR: element 검색 실패")
