@@ -7,6 +7,13 @@ import selenium.common.exceptions as Exceptions
 import pandas as ps
 import time
 
+METRO_GOVERN_ADDRESS_KEY = "metro_government"
+BASE_GOVERN_ADDRESS_KEY = "base_government"
+CITY_ADDRESS_KEY = "city"
+TOWN_ADDRESS_KEY = "town"
+ROAD_ADDRESS_KEY = "road_name"
+DETAIL_ADDRESS_KEY = "detail"
+
 def sleep(second):
     time.sleep(second)
     
@@ -59,12 +66,12 @@ def analyze_address(address):
     address_list = address.split()
 
     address_dict = dict()
-    address_dict["metro_government"] = address_list[0]
-    address_dict["base_government"] = None
-    address_dict["city"] = None
-    address_dict["town"] = None
-    address_dict["road_name"] = None
-    address_dict["detail"] = None
+    address_dict[METRO_GOVERN_ADDRESS_KEY] = address_list[0]
+    address_dict[BASE_GOVERN_ADDRESS_KEY] = None
+    address_dict[CITY_ADDRESS_KEY] = None
+    address_dict[TOWN_ADDRESS_KEY] = None
+    address_dict[ROAD_ADDRESS_KEY] = None
+    address_dict[DETAIL_ADDRESS_KEY] = None
 
     metro = address_list[0]
     if metro == "세종":
@@ -82,14 +89,14 @@ def analyze_sejong(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("읍") or word.endswith("면"):
-            address_dict["town"] = word
+            address_dict[TOWN_ADDRESS_KEY] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road_name"] = word
+            address_dict[ROAD_ADDRESS_KEY] = word
         else:
-            if address_dict["detail"] is None:
-                address_dict["detail"] = word
+            if address_dict[DETAIL_ADDRESS_KEY] is None:
+                address_dict[DETAIL_ADDRESS_KEY] = word
             else:
-                address_dict["detail"] += " " + word
+                address_dict[DETAIL_ADDRESS_KEY] += " " + word
 
     return address_dict
 
@@ -97,51 +104,51 @@ def analyze_jeju(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("시"):
-            address_dict["city"] = word
+            address_dict[CITY_ADDRESS_KEY] = word
 
         elif word.endswith("읍") or word.endswith("면"):
-            address_dict["town"] = word
+            address_dict[TOWN_ADDRESS_KEY] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road_name"] = word
+            address_dict[ROAD_ADDRESS_KEY] = word
         else:
-            if address_dict["detail"] is None :
-                address_dict["detail"] = word
+            if address_dict[DETAIL_ADDRESS_KEY] is None :
+                address_dict[DETAIL_ADDRESS_KEY] = word
             else:
-                address_dict["detail"] += " " + word
+                address_dict[DETAIL_ADDRESS_KEY] += " " + word
 
     return address_dict
 
 def analyze_guangyuksi(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("구") or word.endswith("군"):
-            address_dict["base_government"] = word
+            address_dict[BASE_GOVERN_ADDRESS_KEY] = word
         elif word.endswith("읍") or word.endswith("면"):
-            address_dict["town"] = word
+            address_dict[TOWN_ADDRESS_KEY] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road_name"] = word
+            address_dict[ROAD_ADDRESS_KEY] = word
         else:
-            if address_dict["detail"] is None:
-                address_dict["detail"] = word
+            if address_dict[DETAIL_ADDRESS_KEY] is None:
+                address_dict[DETAIL_ADDRESS_KEY] = word
             else:
-                address_dict["detail"] += " " + word
+                address_dict[DETAIL_ADDRESS_KEY] += " " + word
 
     return address_dict
 
 def analyze_do(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("시") or word.endswith("군"):
-            address_dict["base_government"] = word
+            address_dict[BASE_GOVERN_ADDRESS_KEY] = word
         elif word.endswith("구"):
-            address_dict["city"] = word
+            address_dict[CITY_ADDRESS_KEY] = word
         elif word.endswith("읍") or word.endswith("면"):
-            address_dict["town"] = word
+            address_dict[TOWN_ADDRESS_KEY] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road_name"] = word
+            address_dict[ROAD_ADDRESS_KEY] = word
         else:
-            if address_dict["detail"] is None:
-                address_dict["detail"] = word
+            if address_dict[DETAIL_ADDRESS_KEY] is None:
+                address_dict[DETAIL_ADDRESS_KEY] = word
             else:
-                address_dict["detail"] += " " + word
+                address_dict[DETAIL_ADDRESS_KEY] += " " + word
 
     return address_dict
 
@@ -149,14 +156,14 @@ def analyze_teugbyeolsi(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("구"):
-            address_dict["base_government"] = word
+            address_dict[BASE_GOVERN_ADDRESS_KEY] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road_name"] = word
+            address_dict[ROAD_ADDRESS_KEY] = word
         else:
-            if address_dict["detail"] is None:
-                address_dict["detail"] = word
+            if address_dict[DETAIL_ADDRESS_KEY] is None:
+                address_dict[DETAIL_ADDRESS_KEY] = word
             else:
-                address_dict["detail"] += " " + word
+                address_dict[DETAIL_ADDRESS_KEY] += " " + word
 
     return address_dict
 
@@ -210,9 +217,7 @@ def main():
         book_stores = list()
 
         for i in range(10):
-            book_stores = driver.find_elements(By.CLASS_NAME, "place_bluelink")
-
-            last_book_store = book_stores[-1]
+            book_stores = driver.find_elements(By.CLASS_NAME, "place_bluelink")            last_book_store = book_stores[-1]
             action = ActionChains(driver)
             action.move_to_element(last_book_store).perform()
             
@@ -233,8 +238,6 @@ def main():
             except Exceptions.NoSuchElementException:
                 book_store_location = None
                 
-            # book_store_closed_days=""
-            # book_store_time=""
             book_store_closed_days=None
             book_store_time=None
             try: # 영업 시간 토글 있을 때
@@ -246,12 +249,6 @@ def main():
                 book_store_time_hours = driver.find_elements(By.CLASS_NAME, "H3ua4")
 
                 book_store_time, book_store_closed_days = operating_day_to_dict(book_store_time_days, book_store_time_hours, book_store_closed_days)
-
-                # for i in range(len(book_store_time_days)):
-                #     if "정기휴무" in book_store_time_hours[i].text:
-                #         book_store_closed_days += book_store_time_days[i].text + " "
-                #     else:
-                #         book_store_time += book_store_time_days[i].text + "-> " + book_store_time_hours[i].text + " "
 
             # 영업 시간 토글 없을 때
             except Exceptions.NoSuchElementException:
@@ -265,10 +262,6 @@ def main():
                 book_store_phone = driver.find_element(By.CLASS_NAME, "xlx7Q").text
             except Exceptions.NoSuchElementException:
                 book_store_phone = "null"
-
-            # if not book_store_closed_days:
-            #     book_store_closed_days = "null"
-            # 'phone': book_store_phone
             
             space = {'name': book_store_title, 'closed_days': book_store_closed_days, 'operating_time': book_store_time, 'road_address': "삭제 예정", 'type': '독립서점', 'image_url': get_image()}
             space.update(analyze_address(book_store_location))
@@ -288,7 +281,6 @@ def main():
     finally:
         pass
 
-    # driver.switch_to.default_content()
     driver.quit()
     return space_dict_list
 
