@@ -50,19 +50,21 @@ def to_next_page():
             right_button = button
             if right_button.get_attribute("aria-disabled") == "false":
                 right_button.click()
+                return True
             
+    return False
 
 def analyze_address(address):
     
     address_list = address.split()
 
     address_dict = dict()
-    address_dict["metro"] = address_list[0]
-    address_dict["basic"] = "null"
-    address_dict["city"] = "null"
-    address_dict["town"] = "null"
-    address_dict["road"] = "null"
-    address_dict["detail"] = "null"
+    address_dict["metro_government"] = address_list[0]
+    address_dict["base_government"] = None
+    address_dict["city"] = None
+    address_dict["town"] = None
+    address_dict["road_name"] = None
+    address_dict["detail"] = None
 
     metro = address_list[0]
     if metro == "세종":
@@ -82,9 +84,9 @@ def analyze_sejong(address_list, address_dict):
         if word.endswith("읍") or word.endswith("면"):
             address_dict["town"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road"] = word
+            address_dict["road_name"] = word
         else:
-            if address_dict["detail"] == "null":
+            if address_dict["detail"] is None:
                 address_dict["detail"] = word
             else:
                 address_dict["detail"] += " " + word
@@ -100,9 +102,9 @@ def analyze_jeju(address_list, address_dict):
         elif word.endswith("읍") or word.endswith("면"):
             address_dict["town"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road"] = word
+            address_dict["road_name"] = word
         else:
-            if address_dict["detail"] == "null":
+            if address_dict["detail"] is None :
                 address_dict["detail"] = word
             else:
                 address_dict["detail"] += " " + word
@@ -112,13 +114,13 @@ def analyze_jeju(address_list, address_dict):
 def analyze_guangyuksi(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("구") or word.endswith("군"):
-            address_dict["basic"] = word
+            address_dict["base_government"] = word
         elif word.endswith("읍") or word.endswith("면"):
             address_dict["town"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road"] = word
+            address_dict["road_name"] = word
         else:
-            if address_dict["detail"] == "null":
+            if address_dict["detail"] is None:
                 address_dict["detail"] = word
             else:
                 address_dict["detail"] += " " + word
@@ -128,15 +130,15 @@ def analyze_guangyuksi(address_list, address_dict):
 def analyze_do(address_list, address_dict):
     for word in address_list[1:]:
         if word.endswith("시") or word.endswith("군"):
-            address_dict["basic"] = word
+            address_dict["base_government"] = word
         elif word.endswith("구"):
             address_dict["city"] = word
         elif word.endswith("읍") or word.endswith("면"):
             address_dict["town"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road"] = word
+            address_dict["road_name"] = word
         else:
-            if address_dict["detail"] == "null":
+            if address_dict["detail"] is None:
                 address_dict["detail"] = word
             else:
                 address_dict["detail"] += " " + word
@@ -147,25 +149,37 @@ def analyze_teugbyeolsi(address_list, address_dict):
 
     for word in address_list[1:]:
         if word.endswith("구"):
-            address_dict["basic"] = word
+            address_dict["base_government"] = word
         elif word.endswith("길") or word.endswith("리") or word.endswith("로"):
-            address_dict["road"] = word
+            address_dict["road_name"] = word
         else:
-            if address_dict["detail"] == "null":
+            if address_dict["detail"] is None:
                 address_dict["detail"] = word
             else:
                 address_dict["detail"] += " " + word
 
     return address_dict
 
+def collapse_day(operation_time_dict):
+    result = ""
+    for key in operation_time_dict.keys():
+        result += operation_time_dict[key] + " " + key + "  "
+    
+    return result
+    # for value in operation_time_dict.values():
+        # day_list = value.split()
+        
 def operating_day_to_dict(book_store_time_days, book_store_time_hours, book_store_closed_days):
     operating_dict = dict()
     for i in range(len(book_store_time_days)):
         hour = book_store_time_hours[i].text
         day = book_store_time_days[i].text
         if "정기휴무" in hour or "정보없음" in hour:
-            book_store_closed_days += day + " "
+            if book_store_closed_days == None:
+                book_store_closed_days = day + " "
+            else: book_store_closed_days += day + " "
             continue 
+
         if "\n" in hour:
             index = hour.index("""\n""")
             hour = hour[:index]
@@ -175,8 +189,17 @@ def operating_day_to_dict(book_store_time_days, book_store_time_hours, book_stor
             else:
                 operating_dict[hour] += " " + day
 
-    return operating_dict, book_store_closed_days
-    
+    return collapse_day(operating_dict), book_store_closed_days
+
+def get_image():
+    try:
+        picture_style = driver.find_element(By.ID, "ibu_1").get_attribute("style")
+        index = picture_style.index("url(\"")
+        index_end = picture_style.index("\");");
+        return picture_style[index+5:index_end]
+    except Exception:
+        return None
+
 
 metro_list = ['서울', '부산', '인천', '대구', '광주', '대전', '울산', '세종', '경기도', '충청북도', '충청남도', '전라북도', '전라남도', '경상북도', '경상남도', '강원', '제주']
 space_dict_list = []
@@ -208,10 +231,12 @@ def main():
             try:
                 book_store_location = driver.find_element(By.CLASS_NAME, "LDgIH").text
             except Exceptions.NoSuchElementException:
-                book_store_location = "null"
+                book_store_location = None
                 
-            book_store_closed_days=""
-            book_store_time=""
+            # book_store_closed_days=""
+            # book_store_time=""
+            book_store_closed_days=None
+            book_store_time=None
             try: # 영업 시간 토글 있을 때
                 book_store_time_div = driver.find_element(By.CLASS_NAME, "O8qbU.pSavy")
                 book_store_time_toggle_span = book_store_time_div.find_element(By.CLASS_NAME, "_UCia")
@@ -233,24 +258,29 @@ def main():
                 try:
                     book_store_time = driver.find_element(By.CLASS_NAME, "U7pYf").text
                 except Exceptions.NoSuchElementException:
-                    book_store_time = "null"
+                    # book_store_time = "null"
+                    book_store_time = None
 
             try:
                 book_store_phone = driver.find_element(By.CLASS_NAME, "xlx7Q").text
             except Exceptions.NoSuchElementException:
                 book_store_phone = "null"
 
-            if not book_store_closed_days:
-                book_store_closed_days = "null"
-                
-            space = {'name': book_store_title, 'address': analyze_address(book_store_location), 'opration_time': book_store_time, 'closed_time': book_store_closed_days, 'phone': book_store_phone}
+            # if not book_store_closed_days:
+            #     book_store_closed_days = "null"
+            # 'phone': book_store_phone
+            
+            space = {'name': book_store_title, 'closed_days': book_store_closed_days, 'operating_time': book_store_time, 'road_address': "삭제 예정", 'type': '독립서점', 'image_url': get_image()}
+            space.update(analyze_address(book_store_location))
+
             space_dict_list.append(space)
             print(space_dict_list[-1])
 
             driver.switch_to.default_content()
             switch_frame(frame_id="searchIframe")
 
-        to_next_page()
+        if to_next_page():
+            main()
 
     except Exceptions.NoSuchElementException:
         print("ERROR: element 검색 실패")
@@ -258,7 +288,7 @@ def main():
     finally:
         pass
 
-    driver.switch_to.default_content()
+    # driver.switch_to.default_content()
     driver.quit()
     return space_dict_list
 
@@ -280,8 +310,8 @@ def search(metro_list):
 
     space_list = main()
     df = ps.DataFrame(data=space_list)
-    df.to_excel("test.xlsx", index=False)
-
+    # df.to_excel("test.xlsx", index=False, encoding='utf8')
+    df.to_csv("test.csv", index = False, encoding='utf8')
     # except Exceptions.NoSuchElementException:
         # print("ERROR: element 검색 실패")
 
