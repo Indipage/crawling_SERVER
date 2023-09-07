@@ -13,6 +13,8 @@ CITY_ADDRESS_KEY = "city"
 TOWN_ADDRESS_KEY = "town"
 ROAD_ADDRESS_KEY = "road_name"
 DETAIL_ADDRESS_KEY = "detail"
+DONG_ADDRESS_KEY = "dong"
+SPACE_DETAIL_KEY = "detail"
 
 def sleep(second):
     time.sleep(second)
@@ -217,7 +219,8 @@ def main():
         book_stores = list()
 
         for i in range(10):
-            book_stores = driver.find_elements(By.CLASS_NAME, "place_bluelink")            last_book_store = book_stores[-1]
+            book_stores = driver.find_elements(By.CLASS_NAME, "place_bluelink")            
+            last_book_store = book_stores[-1]
             action = ActionChains(driver)
             action.move_to_element(last_book_store).perform()
             
@@ -234,7 +237,14 @@ def main():
             book_store_title = driver.find_element(By.CLASS_NAME, "Fc1rA").text
 
             try:
+                book_store_location_div = driver.find_element(By.CLASS_NAME, "vV_z_")
                 book_store_location = driver.find_element(By.CLASS_NAME, "LDgIH").text
+                
+                # 동 주소 찾기 -> 동 주소가 있는 부분의 id/class가 없어서 일단 보류
+                # book_store_location_div.find_element(By.CLASS_NAME, "_UCia").click()
+                # book_dong_location_div = book_store_location_div.find_elements(By.CLASS_NAME, "nQ7Lh")[1]
+                # dong_location = book_dong_location_div.find_elements(By.CLASS_NAME, "TjXg1").text
+                # print(dong_location)
             except Exceptions.NoSuchElementException:
                 book_store_location = None
                 
@@ -263,7 +273,16 @@ def main():
             except Exceptions.NoSuchElementException:
                 book_store_phone = "null"
             
-            space = {'name': book_store_title, 'closed_days': book_store_closed_days, 'operating_time': book_store_time, 'road_address': "삭제 예정", 'type': '독립서점', 'image_url': get_image()}
+
+            try:
+                store_introduction_div = driver.find_element(By.CLASS_NAME, "O8qbU.dRAr1")
+                store_introduction_div.find_element(By.CLASS_NAME, "rvCSr").click()
+                store_introduction = store_introduction_div.find_element(By.CLASS_NAME, "zPfVt").text
+
+            except Exceptions.NoSuchElementException:
+                store_introduction = "null"
+
+            space = {'name': book_store_title, 'closed_days': book_store_closed_days, 'operating_time': book_store_time, 'road_address': "삭제 예정", 'type': '독립서점', 'image_url': get_image(), 'introduction': store_introduction}
             space.update(analyze_address(book_store_location))
 
             space_dict_list.append(space)
@@ -287,7 +306,7 @@ def main():
 def search(metro_list):
     # try: 
     # for metro in metro_list:
-    driver.find_element(By.CLASS_NAME, "link_navbar.home").click()
+    # driver.find_element(By.CLASS_NAME, "link_navbar.home").click()
     sleep(3)
 
     input = driver.find_element(By.CLASS_NAME, "input_search")
